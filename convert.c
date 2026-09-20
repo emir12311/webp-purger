@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <webp/decode.h>
 #include <png.h>
 
@@ -44,6 +45,26 @@ int	get_raw_bytes(char* path, buffer* buf)
 	return (0);
 }
 
+int	check_webp_header(buffer* buf)
+{
+	if (buf->data_size < 12)
+	{	
+		fprintf(stderr, "buf.data_size is less than 12. bailing\n");
+		return (1);
+	}
+	else if (memcmp(buf->data, "RIFF", 4) != 0)
+	{
+		fprintf(stderr, "file doesnt contain 'RIFF' signature, invalid webp.\n");
+		return (1);
+	}
+	else if (memcmp(buf->data + 8, "WEBP", 4) != 0)
+	{
+		fprintf(stderr, "file doesnt contain 'WEBP' signature, invalid webp.\n");
+		return (1);
+	}
+	return (0);
+}
+
 int decode_webp(buffer* buf)
 {
 	buf->rgba_ptr = WebPDecodeRGBA(buf->data, buf->data_size, &buf->width, &buf->height);
@@ -75,20 +96,6 @@ int	raw_to_png(char* path, buffer* buf)
 	}
 	strcpy(new_path, path);
 	dot_ptr = strrchr(new_path, '.');
-	if (dot_ptr == NULL)
-	{
-		fprintf(stderr, "strrchr returned null.\n");
-		WebPFree(buf->rgba_ptr);
-		free(new_path);
-		return (1);
-	}
-	if (strcasecmp(dot_ptr + 1, "webp") != 0)
-	{
-		fprintf(stderr, "strcasecmp returned non-zero. check file name.\n");
-		WebPFree(buf->rgba_ptr);
-		free(new_path);
-		return (1);
-	}
 	strcpy(dot_ptr, ".png");
 	if(!png_image_write_to_file(&png, new_path, 0, buf->rgba_ptr, buf->width * 4, NULL))
 	{
@@ -105,18 +112,14 @@ int convert(char *path)
 {
 	buffer	buf;
 
-	memset(&buf, 0, sizeof buf);
-	if (!get_raw_bytes(path, &buf))
+	if (get_raw_bytes(path, &buf)
+		|| check_webp_header(&buf)
+		|| decode_webp(&buf)
+		|| raw_to_png(path, &buf))
 	{
-		if (!decode_webp(&buf))
-		{
-			if (!raw_to_png(path, &buf))
-			{
-				free(buf.data);
-				return (0);
-			}
-		}
+		free(buf.data);
+		return (1);
 	}
 	free(buf.data);
-	return (1);
+	return (0);
 }
