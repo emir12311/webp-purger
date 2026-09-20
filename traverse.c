@@ -1,5 +1,4 @@
 #include "shared.h" // has all the general libs
-#include <sys/stat.h>
 
 int walk(char* path)
 {
