@@ -7,3 +7,5 @@
 #include <sys/stat.h>
 
 int convert(char* path);
+
+int walk(char* path);
