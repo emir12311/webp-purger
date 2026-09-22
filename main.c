@@ -3,6 +3,7 @@
 int main(int argc, char* argv[])
 {
     struct stat st;
+    int status;
 
     if (argc != 2)
     {
@@ -19,9 +20,15 @@ int main(int argc, char* argv[])
         fprintf(stderr, "The passed path is not a directory.\n");
         return(1);
     }
-    if (walk(argv[1]) != 0)
+    status = walk(argv[1]);
+    if (status == 1)
     {
         fprintf(stderr, "The path walk failed.\n");
+        return(1);
+    }
+    else if (status == -1)
+    {
+        printf("Aborting..\n");
         return(1);
     }
     return (0);

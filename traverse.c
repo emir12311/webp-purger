@@ -1,5 +1,12 @@
 #include "shared.h" // has all the general libs
 
+void clean_stdin(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+        ;
+}
+
 int walk(char* path)
 {
     DIR* dir;
@@ -7,11 +14,12 @@ int walk(char* path)
     struct stat st;
     char* dot_ptr;
     char path_buf[4096];
+    char    buf[16];
     
     dir = opendir(path);
     if (dir == NULL)
     {
-        fprintf(stderr, "opendir returned NULL, bailing\n");
+        fprintf(stderr, "%s:\nopendir returned NULL, bailing\n", path);
         return (1);
     }
     while (1)
@@ -28,15 +36,41 @@ int walk(char* path)
             continue ;
         }
         if (S_ISDIR(st.st_mode))
-            walk(path_buf);
+        {    
+            if (walk(path_buf) == -1)
+            {
+                closedir(dir);
+                return (-1);
+            }
+        }
         else if (S_ISREG(st.st_mode))
         {
-            dot_ptr = strrchr(path_buf, '.');
+            dot_ptr = strrchr(entry->d_name, '.');
             if (dot_ptr == NULL)
                 continue ;
             if (strcasecmp(dot_ptr + 1, "webp") != 0)
                 continue ;
-            convert(path_buf);
+            if (convert(path_buf))
+            {
+                fprintf(stderr, "Failed to convert %s\n", path_buf);
+                printf("Continue? [y/N] ");
+                fflush(stdout);
+                if (fgets(buf, sizeof buf, stdin) == NULL)
+                {
+                    fprintf(stderr, "%s:\nfgets returned null.\n", path_buf);
+                    closedir(dir);
+                    return (-1);
+                }
+                if (strchr(buf, '\n') == NULL)
+                    clean_stdin();
+                if (buf[0] == 'y' || buf[0] == 'Y')
+                    continue ;
+                else
+                {
+                    closedir(dir);
+                    return (-1);
+                }
+            }
         }
     }
     closedir(dir);
