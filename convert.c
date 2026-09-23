@@ -17,6 +17,7 @@ int	get_raw_bytes(char* path, buffer* buf)
 {
 	FILE*	f;
 	size_t	got;
+	long	size;
 
 	f = fopen(path, "rb");
 	if (f == NULL)
@@ -24,8 +25,20 @@ int	get_raw_bytes(char* path, buffer* buf)
 		fprintf(stderr, "fopen returned null.\n");
 		return (1);
 	}
-	fseek(f, 0, SEEK_END);
-	buf->data_size = ftell(f);
+	if (fseek(f, 0, SEEK_END) != 0)
+	{
+		fprintf(stderr, "fseek returned non-zero\n");
+		fclose(f);
+		return (1);	
+	}
+	size = ftell(f);
+	if (size < 0)
+	{
+		fprintf(stderr, "ftell returned smaller than 0.\n");
+		fclose(f);
+		return (1);
+	}
+	buf->data_size = (size_t)size;
 	rewind(f);
 	buf->data = malloc(buf->data_size);
 	if (buf->data == NULL)
@@ -84,8 +97,8 @@ int	raw_to_png(char* path, buffer* buf)
 
 	memset(&png, 0, sizeof png);
 	png.version = PNG_IMAGE_VERSION;
-	png.width = buf->width;
-	png.height = buf->height;
+	png.width = (png_uint_32)buf->width;
+	png.height = (png_uint_32)buf->height;
 	png.format = PNG_FORMAT_RGBA;
 	new_path = malloc(strlen(path) + 1);
 	if (new_path == NULL)

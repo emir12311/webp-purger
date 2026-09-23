@@ -7,7 +7,7 @@ void clean_stdin(void)
         ;
 }
 
-int walk(char* path)
+int walk(char* path, Flags* flags)
 {
     DIR* dir;
     struct dirent* entry;
@@ -37,7 +37,7 @@ int walk(char* path)
         }
         if (S_ISDIR(st.st_mode))
         {    
-            if (walk(path_buf) == -1)
+            if (walk(path_buf, flags) == -1)
             {
                 closedir(dir);
                 return (-1);
@@ -53,6 +53,8 @@ int walk(char* path)
             if (convert(path_buf))
             {
                 fprintf(stderr, "Failed to convert %s\n", path_buf);
+                if (flags->noconfirm == 1)
+                    continue;
                 printf("Continue? [y/N] ");
                 fflush(stdout);
                 if (fgets(buf, sizeof buf, stdin) == NULL)
