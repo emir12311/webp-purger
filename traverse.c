@@ -37,42 +37,52 @@ int walk(char* path, Flags* flags)
         }
         if (S_ISDIR(st.st_mode))
         {    
-            if (walk(path_buf, flags) == -1)
+            if ((entry->d_name[0] == '.' && flags->include_hidden) || entry->d_name[0] != '.')
             {
-                closedir(dir);
-                return (-1);
-            }
+                if (walk(path_buf, flags) == -1)
+                {
+                    closedir(dir);
+                    return (-1);
+                }       
+            } 
+            else
+                continue; 
         }
         else if (S_ISREG(st.st_mode))
         {
-            dot_ptr = strrchr(entry->d_name, '.');
-            if (dot_ptr == NULL)
-                continue ;
-            if (strcasecmp(dot_ptr + 1, "webp") != 0)
-                continue ;
-            if (convert(path_buf))
+            if ((entry->d_name[0] == '.' && flags->include_hidden) || entry->d_name[0] != '.')
             {
-                fprintf(stderr, "Failed to convert %s\n", path_buf);
-                if (flags->noconfirm == 1)
-                    continue;
-                printf("Continue? [y/N] ");
-                fflush(stdout);
-                if (fgets(buf, sizeof buf, stdin) == NULL)
-                {
-                    fprintf(stderr, "%s:\nfgets returned null.\n", path_buf);
-                    closedir(dir);
-                    return (-1);
-                }
-                if (strchr(buf, '\n') == NULL)
-                    clean_stdin();
-                if (buf[0] == 'y' || buf[0] == 'Y')
+                dot_ptr = strrchr(entry->d_name, '.');
+                if (dot_ptr == NULL)
                     continue ;
-                else
+                if (strcasecmp(dot_ptr + 1, "webp") != 0)
+                    continue ;
+                if (convert(path_buf))
                 {
-                    closedir(dir);
-                    return (-1);
+                    fprintf(stderr, "Failed to convert %s\n", path_buf);
+                    if (flags->force)
+                        continue;
+                    printf("Continue? [y/N] ");
+                    fflush(stdout);
+                    if (fgets(buf, sizeof buf, stdin) == NULL)
+                    {
+                        fprintf(stderr, "%s:\nfgets returned null.\n", path_buf);
+                        closedir(dir);
+                        return (-1);
+                    }
+                    if (strchr(buf, '\n') == NULL)
+                        clean_stdin();
+                    if (buf[0] == 'y' || buf[0] == 'Y')
+                        continue ;
+                    else
+                    {
+                        closedir(dir);
+                        return (-1);
+                    }
                 }
             }
+            else
+                continue;
         }
     }
     closedir(dir);

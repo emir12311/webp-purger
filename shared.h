@@ -8,7 +8,8 @@
 
 typedef struct
 {
-    unsigned int noconfirm : 1;
+    unsigned int force : 1;
+    unsigned int include_hidden : 1;
 } Flags;
 
 int convert(char* path);

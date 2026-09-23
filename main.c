@@ -2,7 +2,14 @@
 
 void print_usage(void)
 {
-    fprintf(stderr, "Usage:\nwebp-purger <path to directory> [OPTIONS]\nOptions:\n--noconfirm   Automatically continues on failures.\n");
+    fprintf
+    (stderr,
+    "Usage:\n"
+    "webp-purger <path to directory> [OPTIONS]\n"
+    "Options:\n"
+    "--force              Automatically continues on failures.\n"
+    "--include-hidden     Includes hidden directories and files.\n"
+    );
 }
 
 int parse_args(int argc, char **argv, Flags *flags, char **dir_out)
@@ -14,8 +21,26 @@ int parse_args(int argc, char **argv, Flags *flags, char **dir_out)
     {
         if (argv[i][0] == '-')
         {
-            if (strcmp(argv[i], "--noconfirm") == 0)
-                flags->noconfirm = 1;
+            if (strcmp(argv[i], "--force") == 0)
+            {
+                if (flags->force)
+                {
+                    fprintf(stderr, "Duplicate option: %s\n", argv[i]);
+                    print_usage();
+                    return (1);
+                }
+                flags->force = 1;
+            }    
+            else if (strcmp(argv[i], "--include-hidden") == 0)
+            {
+                if (flags->include_hidden)
+                {
+                    fprintf(stderr, "Duplicate option: %s\n", argv[i]);
+                    print_usage();
+                    return (1);
+                }
+                flags->include_hidden = 1;
+            }    
             else
             {
                 fprintf(stderr, "Unknown option: %s\n", argv[i]);
@@ -50,14 +75,10 @@ int main(int argc, char* argv[])
     char *dir;
 
     memset(&flags, 0, sizeof flags);
-    if (argc < 2 || argc > 3)
-    {
-        print_usage();
+    if (parse_args(argc, argv, &flags, &dir))
         return (1);
-    }
-    else if (parse_args(argc, argv, &flags, &dir))
-        return (1);
-    else if (lstat(dir, &st) != 0)
+    
+    if (lstat(dir, &st) != 0)
     {
         fprintf(stderr, "The passed path is unrecognized.\n");
         return(1);
