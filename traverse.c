@@ -1,8 +1,8 @@
 #include "shared.h" // has all the general libs
 
-int mkdir_p(char* full_path)
+int mkdir_p(const char* full_path)
 {
-    char* slash_ptr;
+    const char* slash_ptr;
     int i;
     int d;
     char prev_buf[PATH_MAX];
@@ -33,7 +33,6 @@ int mkdir_p(char* full_path)
         for (; slash_ptr[i] != '/'; i++, d++)
             aft_buf[d] = slash_ptr[i];
         snprintf(path_buf, sizeof path_buf, "%s%s", prev_buf, aft_buf);
-        fprintf(stderr, "mkdir: %s\n", path_buf);
         if (mkdir(path_buf, 0755) != 0)
         {
             if (errno != EEXIST)
@@ -58,14 +57,14 @@ int mkdir_p(char* full_path)
     return (0);
 }
 
-void clean_stdin(void)
+static void clean_stdin(void)
 {
     int c;
     while ((c = getchar()) != '\n' && c != EOF)
         ;
 }
 
-int walk(char* path, Flags* flags)
+int walk(char* path, const Flags* flags, FILE* log_ptr)
 {
     DIR* dir;
     struct dirent* entry;
@@ -78,7 +77,7 @@ int walk(char* path, Flags* flags)
     dir = opendir(path);
     if (dir == NULL)
     {
-        fprintf(stderr, "%s:\nopendir returned NULL, bailing\n", path);
+        log_message(log_ptr, "opendir returned null.", "Couldnt open directory", path, 1, flags->verbose);
         return (1);
     }
     while (1)
@@ -88,16 +87,17 @@ int walk(char* path, Flags* flags)
             break ;
         else if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             continue ;
+        snprintf(path_buf, sizeof path_buf, "%s/%s", path, entry->d_name);
         if (lstat(path_buf, &st) != 0)
         {
-            fprintf(stderr, "lstat on %s failed\n", path_buf);
+            log_message(log_ptr, "", "lstat on file failed", path_buf, 1, flags->verbose);
             continue ;
         }
         if (S_ISDIR(st.st_mode))
         {    
             if ((entry->d_name[0] == '.' && flags->include_hidden) || entry->d_name[0] != '.')
             {
-                if (walk(path_buf, flags) == -1)
+                if (walk(path_buf, flags, log_ptr) == -1)
                 {
                     closedir(dir);
                     return (-1);
@@ -116,16 +116,17 @@ int walk(char* path, Flags* flags)
                     continue ;
                 if (strcasecmp(dot_ptr + 1, "webp") != 0)
                     continue ;
-                if (convert(path_buf))
+                log_message(log_ptr, "", "Converting..", path_buf, 0, flags->verbose);
+                if (convert(path_buf, log_ptr, flags->verbose))
                 {
-                    fprintf(stderr, "Failed to convert %s\n", path_buf);
+                    log_message(log_ptr, "", "Failed to convert file", path_buf, 1, flags->verbose);
                     if (flags->force)
                         continue;
                     printf("Continue? [y/N] ");
                     fflush(stdout);
                     if (fgets(buf, sizeof buf, stdin) == NULL)
                     {
-                        fprintf(stderr, "%s:\nfgets returned null.\n", path_buf);
+                        log_message(log_ptr, "", "fgets returned null", path_buf, 1, flags->verbose);
                         closedir(dir);
                         return (-1);
                     }
@@ -139,7 +140,7 @@ int walk(char* path, Flags* flags)
                         return (-1);
                     }
                 }
-                
+                log_message(log_ptr, "", "Successfully finished conversion.", path_buf, 0, flags->verbose);
             }
             else
                 continue;
