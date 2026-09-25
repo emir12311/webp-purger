@@ -1,5 +1,4 @@
-#include "shared.h"
-#include <string.h>
+#include "shared.h" // has all the general libs
 
 typedef struct
 {
@@ -26,7 +25,7 @@ static int	get_raw_bytes(char* path, buffer* buf, FILE* log_ptr, int verbose)
 	{
 		log_message(log_ptr, strerror(errno), "fseek failed", path, 1, verbose);
 		fclose(f);
-		return (1);	
+		return (1);
 	}
 	size = ftell(f);
 	if (size < 0)
@@ -58,7 +57,7 @@ static int	get_raw_bytes(char* path, buffer* buf, FILE* log_ptr, int verbose)
 static int	check_webp_header(buffer* buf, FILE* log_ptr, const char* path, int verbose)
 {
 	if (buf->data_size < 12)
-	{	
+	{
 		log_message(log_ptr, "size < 12", "invalid webp", path, 1, verbose);
 		return (1);
 	}
@@ -75,7 +74,7 @@ static int	check_webp_header(buffer* buf, FILE* log_ptr, const char* path, int v
 	return (0);
 }
 
-static int decode_webp(buffer* buf, FILE* log_ptr, const char* path, int verbose)
+static int	decode_webp(buffer* buf, FILE* log_ptr, const char* path, int verbose)
 {
 	buf->rgba_ptr = WebPDecodeRGBA(buf->data, buf->data_size, &buf->width, &buf->height);
 	if (buf->rgba_ptr == NULL)
@@ -107,7 +106,7 @@ static int	raw_to_png(const char* path, buffer* buf, FILE* log_ptr, int verbose)
 	strcpy(new_path, path);
 	dot_ptr = strrchr(new_path, '.');
 	strcpy(dot_ptr, ".png");
-	if(!png_image_write_to_file(&png, new_path, 0, buf->rgba_ptr, buf->width * 4, NULL))
+	if (!png_image_write_to_file(&png, new_path, 0, buf->rgba_ptr, buf->width * 4, NULL))
 	{
 		log_message(log_ptr, "png_image_write_to_file returned 0", "png write failed", path, 1, verbose);
 		WebPFree(buf->rgba_ptr);
@@ -119,7 +118,7 @@ static int	raw_to_png(const char* path, buffer* buf, FILE* log_ptr, int verbose)
 	return (0);
 }
 
-int convert(char *path, FILE* log_ptr, int verbose)
+int	convert(char *path, FILE* log_ptr, int verbose)
 {
 	buffer	buf;
 

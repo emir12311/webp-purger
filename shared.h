@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <errno.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <webp/decode.h>
 #include <png.h>
 #include <sys/stat.h>
@@ -20,10 +22,12 @@ typedef struct
 
 int convert(char* path, FILE* log_ptr, int verbose);
 
-int walk(char* path, const Flags* flags, FILE* log_ptr);
+int walk(const char* path, const Flags* flags, FILE* log_ptr);
 
 int mkdir_p(const char* full_path);
 
 int log_init(const char* home_dir, FILE** out_log_ptr);
 
 int log_message(FILE* log_ptr, const char* reason, const char* message, const char* path, const int err, const int verbose);
+
+int get_home_dir(char** out_home_dir);
