@@ -48,6 +48,7 @@ You can get the executable from the [Releases](https://github.com/emir12311/webp
 * [libpng](http://www.libpng.org/pub/png/libpng.html)
 * Clang
 * Git
+* Make
 
 ### Build from source
 
@@ -57,12 +58,12 @@ cd webp-purger
 make
 ```
 
-This will create a `webp-purger` executable.
+This will create a `webp-purger` executable in `dist`.
 
 You can move it somewhere in your `PATH`, or use it directly:
 
 ```bash
-./webp-purger
+dist/webp-purger
 ```
 
 To remove the object files after building:
