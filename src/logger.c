@@ -1,4 +1,4 @@
-#include "shared.h" // has all the general libs
+#include "../include/shared.h" // has all the general libs
 
 int	log_init(const char* home_dir, FILE** out_log_ptr)
 {

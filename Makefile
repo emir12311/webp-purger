@@ -1,28 +1,34 @@
-SRC = main.c convert.c traverse.c logger.c
+SRC = src/main.c src/convert.c src/traverse.c src/logger.c
 
 NAME = webp-purger
+
+TARGET = dist/$(NAME)
 
 CC = clang
 
 CFLAGS = -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror -Wformat=2 -Wcast-qual -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes
 
-OBJ = main.o convert.o traverse.o logger.o
+OBJ = $(SRC:src/%.c=build/%.o)
 
-all: $(NAME)
+all: $(TARGET)
 
-$(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -lwebp -lpng -o $(NAME)
+$(TARGET): $(OBJ)
+	@mkdir -p dist
+	$(CC) $(CFLAGS) $(OBJ) -lwebp -lpng -o $@
 
-%.o: %.c
+build/%.o: src/%.c
+	@mkdir -p build
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJ)
+	rm -rf build
 
 fclean: clean
-	rm -f $(NAME)
+	rm -f $(TARGET)
+	rm -rf dist
 
 re: fclean
-	$(MAKE) $(NAME)
+	$(MAKE) $(TARGET)
 
 .PHONY: all clean fclean re

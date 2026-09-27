@@ -1,4 +1,4 @@
-#include "shared.h" // has all the general libs
+#include "../include/shared.h" // has all the general libs
 
 int	mkdir_p(const char* full_path)
 {

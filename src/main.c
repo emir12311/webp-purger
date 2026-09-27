@@ -1,4 +1,4 @@
-#include "shared.h"  // has all the general libs
+#include "../include/shared.h"  // has all the general libs
 
 static void	print_usage(void)
 {
